@@ -19,6 +19,7 @@ internal class Loader private constructor(
     context: Context,
     private val url: String,
     private val fileNamePrefix: String = "",
+    private val fileExtension: String = "",
     private val dirName: String,
     private val dirType: Int,
     private val headers: Map<String, String>?,
@@ -26,7 +27,7 @@ internal class Loader private constructor(
 ) {
 
     companion object {
-        private const val TAG = "FileDownloader"
+        private const val TAG = "FileLoader"
 
         private const val MEGABYTE = 1024 * 1024
     }
@@ -45,6 +46,7 @@ internal class Loader private constructor(
             context,
             url,
             fileNamePrefix,
+            fileExtension,
             dirName,
             dirType
         )
@@ -76,6 +78,7 @@ internal class Loader private constructor(
                 context,
                 url,
                 fileNamePrefix,
+                fileExtension,
                 dirName,
                 dirType
             )
@@ -93,7 +96,7 @@ internal class Loader private constructor(
         val outputStream = FileOutputStream(downloadFilePath)
         val buffer = ByteArray(MEGABYTE)
         var actualSize = 0
-        var bufferLength = 0
+        var bufferLength: Int
         while (inputStream.read(buffer).also { bufferLength = it } > 0) {
             actualSize += bufferLength
             outputStream.write(buffer, 0, bufferLength)
@@ -125,6 +128,7 @@ internal class Loader private constructor(
         private var dirType = 0
         private var context: Context? = null
         private var fileNamePrefix = ""
+        private var fileExtension = ""
         private var headers: Map<String, String>? = null
         private var isCookie: Boolean = false
 
@@ -153,6 +157,11 @@ internal class Loader private constructor(
             return this
         }
 
+        fun setFileExtension(fileExtension: String): Builder {
+            this.fileExtension = fileExtension
+            return this
+        }
+
         fun setHeaders(headers: Map<String, String>?): Builder {
             this.headers = headers
             return this
@@ -168,6 +177,7 @@ internal class Loader private constructor(
                 context ?: throw Exception("context cant by NULL"),
                 url ?: throw Exception("Url cant by NULL"),
                 fileNamePrefix,
+                fileExtension,
                 dirName ?: throw Exception("dirName cant by NULL"),
                 dirType,
                 headers,

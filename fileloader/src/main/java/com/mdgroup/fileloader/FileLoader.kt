@@ -1,6 +1,7 @@
 package com.mdgroup.fileloader
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -33,15 +34,17 @@ class FileLoader(private val context: Context) {
          * Accessible by all apps and users. { android ExternalStorageDirectory() }
          */
         const val DIR_EXTERNAL_PUBLIC = AndroidFileManager.DIR_EXTERNAL_PUBLIC
-    }
 
-    private val DEFAULT_TAG = "FileDownloader"
+        private const val TAG = "FileLoader"
+    }
 
     private var downloadWorkManager: WorkManager = WorkManager.getInstance(context)
 
     fun load(
         url: String,
-        tag: String?,
+        tag: String? = TAG,
+        fileNamePrefix: String? = null,
+        fileExtension: FileExtension = FileExtension.UNKNOWN,
         directoryName: String? = null,
         directoryType: Int? = null,
         headers: Map<String, String>? = null,
@@ -49,6 +52,8 @@ class FileLoader(private val context: Context) {
     ) = load(
         listOf(url),
         tag,
+        fileNamePrefix,
+        fileExtension,
         directoryName,
         directoryType,
         headers,
@@ -57,7 +62,9 @@ class FileLoader(private val context: Context) {
 
     fun load(
         urls: List<String>,
-        tag: String? = DEFAULT_TAG,
+        tag: String? = TAG,
+        fileNamePrefix: String? = null,
+        fileExtension: FileExtension = FileExtension.UNKNOWN,
         directoryName: String? = null,
         directoryType: Int? = null,
         headers: Map<String, String>? = null,
@@ -66,13 +73,15 @@ class FileLoader(private val context: Context) {
         workManager = downloadWorkManager,
         urls = urls,
         tag = tag,
+        fileNamePrefix = fileNamePrefix,
+        fileExtension = fileExtension,
         directoryName = directoryName,
         directoryType = directoryType,
         headers = headers,
         isCookie = isCookie
     )
 
-    fun getWorkInfosFlow(tag: String = DEFAULT_TAG): Flow<List<WorkInfo>> =
+    fun getWorkInfosFlow(tag: String = TAG): Flow<List<WorkInfo>> =
         downloadWorkManager.getWorkInfosByTagFlow(tag)
 
     fun getWorkInfoByIdFlow(uuid: UUID): Flow<WorkInfo> =
@@ -81,6 +90,32 @@ class FileLoader(private val context: Context) {
     fun getWorkInfoByIdLiveData(uuid: UUID): LiveData<WorkInfo> =
         downloadWorkManager.getWorkInfoByIdLiveData(uuid)
 
-    fun getWorkInfosByTagLiveData(tag: String = DEFAULT_TAG): LiveData<List<WorkInfo>> =
+    fun getWorkInfosByTagLiveData(tag: String = TAG): LiveData<List<WorkInfo>> =
         downloadWorkManager.getWorkInfosByTagLiveData(tag)
+
+    fun remove(uri: String) = remove(listOf(uri))
+
+    fun remove(uris: List<String>): Int {
+        var count = 0
+        uris.forEach { path ->
+            val file = AndroidFileManager.getFileFromUri(context, Uri.parse(path))
+
+            if (file.exists()) {
+                file.delete()
+                count++
+            }
+        }
+        return count
+    }
+
+    fun clearDirectory(directoryName: String, directoryType: Int): Int {
+        val directory =
+            AndroidFileManager.getAppropriateDirectory(context, directoryName, directoryType)
+        var count = 0
+        directory.listFiles()?.forEach { file ->
+            file.delete()
+            count++
+        }
+        return count
+    }
 }

@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
         val fileDownloader = FileLoader(this)
 
         val urls = listOf(
-            "https://images.pexels.com/photos/45170/kittens-cat-cat-puppy-rush-45170.jpeg",
+            "https://raw.githubusercontent.com/mobile-development-group/fileloader/main/assets/kittens.jpeg",
         )
 
         val uuid = fileDownloader.load(
@@ -96,6 +97,13 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     Text(text = "Url: $it")
+
+                                    Button(onClick = {
+                                        fileDownloader.remove(it)
+                                        urls.toMutableList().remove(it)
+                                    }) {
+                                        Text(text = "Delete")
+                                    }
                                 }
                             }
                         }

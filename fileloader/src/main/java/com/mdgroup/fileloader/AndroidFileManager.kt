@@ -3,6 +3,7 @@ package com.mdgroup.fileloader
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Environment
 import android.text.TextUtils
 import java.io.BufferedReader
@@ -14,7 +15,6 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLDecoder
 import java.util.regex.Pattern
-
 
 internal object AndroidFileManager {
 
@@ -50,15 +50,16 @@ internal object AndroidFileManager {
         context: Context,
         fileUri: String,
         fileNamePrefix: String,
+        fileExtension: String,
         dirName: String,
         dirType: Int
     ): File = File(
         getAppropriateDirectory(context, dirName, dirType),
-        getFileName(fileUri, fileNamePrefix)
+        getFileName(fileUri, fileNamePrefix, fileExtension)
     )
 
     @Throws(Exception::class)
-    fun getFileName(uri: String, fileNamePrefix: String): String {
+    fun getFileName(uri: String, fileNamePrefix: String, fileExtension: String = ""): String {
         var fileName: String?
         try {
             // Passed uri is valid url, create file name as hashcode of url
@@ -78,25 +79,7 @@ internal object AndroidFileManager {
         fileName = fileName?.replace("%20", "_")
         // Replace all other screened characters
         fileName = URLDecoder.decode(fileName, "UTF-8")
-        return fileNamePrefix + fileName
-    }
-
-    private fun getFileNameFromUrl(url: URL): String? {
-        var fileName: String? = null
-        val path = url.path
-        if (path != null) {
-            val pathArr = path
-                .split("/".toRegex())
-                .dropLastWhile { it.isEmpty() }
-                .toTypedArray()
-            if (pathArr.isNotEmpty()) {
-                val lastPath = pathArr[pathArr.size - 1]
-                if (isValidFileName(lastPath)) {
-                    fileName = lastPath
-                }
-            }
-        }
-        return fileName
+        return fileNamePrefix + fileName + fileExtension
     }
 
     @Throws(Exception::class)
@@ -111,6 +94,7 @@ internal object AndroidFileManager {
                 context,
                 directoryName
             )
+
             DIR_EXTERNAL_PUBLIC -> getExternalPublicDirectory(directoryName)
             else -> File(context.filesDir, directoryName)
         }
@@ -120,38 +104,23 @@ internal object AndroidFileManager {
         return file
     }
 
-    @Throws(Exception::class)
-    private fun getExternalPublicDirectory(directoryName: String): File {
-        return if (isExternalStorageWritable()) {
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)?.let {
-                it
-            } ?: run {
-                File(Environment.getExternalStorageDirectory().absolutePath, directoryName)
-            }
+    @Throws(IOException::class)
+    fun getFileFromUri(context: Context, uri: Uri): File {
+        val options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        val file = File(uri.toString())
+        return if (file.exists()) {
+            file
         } else {
-            throw Exception("External storage is not available for write operation")
-        }
-    }
-
-    @Throws(Exception::class)
-    private fun getExternalPrivateDirectory(context: Context, directoryName: String): File {
-        val baseDir = if (isExternalStorageWritable()) {
-            val baseDirFile = context.getExternalFilesDir(null)
-            if (baseDirFile == null) {
-                context.filesDir.absolutePath
-            } else {
-                baseDirFile.absolutePath
+            val imageStream = context.contentResolver.openInputStream(uri)
+            imageStream.use { stream ->
+                file.createNewFile()
+                file.outputStream().use { fileOut ->
+                    stream?.copyTo(fileOut)
+                }
+                file
             }
-        } else {
-            throw Exception("External storage is not available for write operation")
         }
-        return File(baseDir, directoryName)
-    }
-
-    private fun isExternalStorageWritable(): Boolean {
-        /* Checks if external storage is available for read and write */
-        val state = Environment.getExternalStorageState()
-        return Environment.MEDIA_MOUNTED == state
     }
 
     fun readFileAsString(file: File): String {
@@ -173,20 +142,6 @@ internal object AndroidFileManager {
 
     fun getBitmap(downloadedFile: File): Bitmap {
         return BitmapFactory.decodeFile(downloadedFile.path)
-    }
-
-    @Throws(Exception::class)
-    fun deleteFile(
-        context: Context,
-        fileUri: String,
-        fileNamePrefix: String,
-        dirName: String,
-        dirType: Int
-    ) {
-        val fileToDelete = getFileForRequest(context, fileUri, fileNamePrefix, dirName, dirType)
-        if (fileToDelete.exists()) {
-            fileToDelete.delete()
-        }
     }
 
     @Throws(Exception::class)
@@ -222,5 +177,57 @@ internal object AndroidFileManager {
     private fun isValidFileName(fileName: String): Boolean {
         val pattern = Pattern.compile(".*\\..*")
         return pattern.matcher(fileName).matches()
+    }
+
+    private fun isExternalStorageWritable(): Boolean {
+        /* Checks if external storage is available for read and write */
+        val state = Environment.getExternalStorageState()
+        return Environment.MEDIA_MOUNTED == state
+    }
+
+    private fun getFileNameFromUrl(url: URL): String? {
+        var fileName: String? = null
+        val path = url.path
+        if (path != null) {
+            val pathArr = path
+                .split("/".toRegex())
+                .dropLastWhile { it.isEmpty() }
+                .toTypedArray()
+            if (pathArr.isNotEmpty()) {
+                val lastPath = pathArr[pathArr.size - 1]
+                if (isValidFileName(lastPath)) {
+                    fileName = lastPath
+                }
+            }
+        }
+        return fileName
+    }
+
+    @Throws(Exception::class)
+    private fun getExternalPublicDirectory(directoryName: String): File {
+        return if (isExternalStorageWritable()) {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)?.let {
+                it
+            } ?: run {
+                File(Environment.getExternalStorageDirectory().absolutePath, directoryName)
+            }
+        } else {
+            throw Exception("External storage is not available for write operation")
+        }
+    }
+
+    @Throws(Exception::class)
+    private fun getExternalPrivateDirectory(context: Context, directoryName: String): File {
+        val baseDir = if (isExternalStorageWritable()) {
+            val baseDirFile = context.getExternalFilesDir(null)
+            if (baseDirFile == null) {
+                context.filesDir.absolutePath
+            } else {
+                baseDirFile.absolutePath
+            }
+        } else {
+            throw Exception("External storage is not available for write operation")
+        }
+        return File(baseDir, directoryName)
     }
 }

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.MalformedURLException
@@ -15,9 +16,11 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
 
     companion object {
 
-        private const val TAG = "DownloadFileWork"
+        private const val TAG = "LoaderWorker"
 
         const val KEY_DOWNLOAD_URLS = "KEY_DOWNLOAD_URLS"
+        const val KEY_FILE_NAME_PREFIX = "KEY_FILE_NAME_PREFIX"
+        const val KEY_FILE_EXTENSION = "KEY_FILE_EXTENSION"
         const val KEY_DIRECTORY_NAME = "KEY_DIRECTORY_NAME"
         const val KEY_DIRECTORY_TYPE = "KEY_DIRECTORY_TYPE"
         const val KEY_HEADERS_NAMES = "KEY_HEADERS_NAMES"
@@ -36,6 +39,8 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
 
         val urls = inputData.getStringArray(KEY_DOWNLOAD_URLS)
 
+        val fileNamePrefix = inputData.getString(KEY_FILE_NAME_PREFIX) ?: ""
+        val fileExtension = FileExtension.parse(inputData.getString(KEY_FILE_EXTENSION))
         val directoryName =
             inputData.getString(KEY_DIRECTORY_NAME) ?: Environment.DIRECTORY_DOWNLOADS
         val directoryType =
@@ -61,6 +66,8 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
                     .setUrl(url)
                     .setDirName(directoryName)
                     .setDirType(directoryType)
+                    .setFileNamePrefix(fileNamePrefix)
+                    .setFileExtension(fileExtension.value)
                     .setHeaders(headers)
                     .setCookie(isCookie)
                     .build()

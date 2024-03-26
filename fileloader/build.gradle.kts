@@ -55,9 +55,9 @@ publishing {
                 // Here we configure some properties of the publication (these are
                 // automatically applied to the pom file). Your library will be
                 // referenced as ${groupId}:${artifactId}.
-                groupId = "com.mdgroup.fileloader"
+                groupId = "io.github.mobile-development-group"
                 artifactId = "fileloader"
-                version = "1.0.0"
+                version = "1.0.1"
 
                 // And here are some more properties that go into the pom file.
                 // For a full list of required metadata fields, see:
@@ -100,7 +100,6 @@ publishing {
             // from above.
             name = "sonatype"
 
-            // Self-explanatory.
             url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
 
             credentials {
@@ -112,6 +111,9 @@ publishing {
 
                     username = properties.getProperty("ossrhUsername")
                     password = properties.getProperty("ossrhPassword")
+                } else {
+                    username = System.getenv("OSSRH_USERNAME")
+                    password = System.getenv("OSSRH_PASSWORD")
                 }
             }
         }
@@ -141,7 +143,12 @@ signing {
 
         useInMemoryPgpKeys(defaultKeyId, secretKey, password)
     } else {
-        useGpgCmd()
+        val defaultKeyId = System.getenv("SIGNING_KEY_ID")
+        val secretKey = System.getenv("SIGNING_KEY")
+        val password = System.getenv("SIGNING_PASSWORD")
+
+        useInMemoryPgpKeys(defaultKeyId, secretKey, password)
+//        useGpgCmd()
     }
 
     // Since the publication itself was created in `afterEvaluate`, we must

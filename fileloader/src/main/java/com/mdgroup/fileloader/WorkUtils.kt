@@ -11,26 +11,10 @@ internal object WorkUtils {
 
     fun makeDownloadRequest(
         workManager: WorkManager,
-        url: String,
-        tag: String?,
-        directoryName: String? = null,
-        directoryType: Int? = null,
-        headers: Map<String, String>? = null,
-        isCookie: Boolean = false
-    ) = makeDownloadRequest(
-        workManager,
-        listOf(url),
-        tag,
-        directoryName,
-        directoryType,
-        headers,
-        isCookie
-    )
-
-    fun makeDownloadRequest(
-        workManager: WorkManager,
         urls: List<String>,
         tag: String?,
+        fileNamePrefix: String? = null,
+        fileExtension: FileExtension = FileExtension.UNKNOWN,
         directoryName: String? = null,
         directoryType: Int? = null,
         headers: Map<String, String>? = null,
@@ -42,10 +26,15 @@ internal object WorkUtils {
             if (urls.isNotEmpty()) {
                 putStringArray(LoaderWorker.KEY_DOWNLOAD_URLS, urls.toTypedArray())
             }
+
+            putString(LoaderWorker.KEY_FILE_NAME_PREFIX, fileNamePrefix)
+            putString(LoaderWorker.KEY_FILE_EXTENSION, fileExtension.value)
+
             putString(LoaderWorker.KEY_DIRECTORY_NAME, directoryName)
             if (directoryType != null) {
                 putInt(LoaderWorker.KEY_DIRECTORY_TYPE, directoryType)
             }
+
             if (!headers.isNullOrEmpty()) {
                 putStringArray(LoaderWorker.KEY_HEADERS_NAMES, headers.keys.toTypedArray())
                 putStringArray(LoaderWorker.KEY_HEADERS_VALUES, headers.values.toTypedArray())

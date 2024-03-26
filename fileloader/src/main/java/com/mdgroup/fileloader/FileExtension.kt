@@ -1,15 +1,20 @@
 package com.mdgroup.fileloader
 
 
-object FileExtension {
-    const val UNKNOWN = ""
-    const val JPG = ".jpg"
-    const val JPEG = ".jpeg"
-    const val GIF = ".gif"
-    const val WEBM = ".webm"
-    const val MP3 = ".mp3"
-    const val MP4 = ".mp4"
-    const val JSON = ".json"
-    const val PDF = ".pdf"
-    const val TEXT = ".txt"
+enum class FileExtension(val value: String) {
+    UNKNOWN(""),
+    JPG(".jpg"),
+    JPEG(".jpeg"),
+    GIF(".gif"),
+    WEBM(".webm"),
+    MP3(".mp3"),
+    MP4(".mp4"),
+    JSON(".json"),
+    PDF(".pdf"),
+    TEXT(".txt");
+
+    companion object {
+        fun parse(value: String?): FileExtension =
+            entries.firstOrNull { it.value == value } ?: UNKNOWN
+    }
 }
