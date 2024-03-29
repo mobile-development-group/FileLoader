@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 import java.util.UUID
 
 class FileLoader(private val context: Context) {
@@ -118,4 +119,7 @@ class FileLoader(private val context: Context) {
         }
         return count
     }
+
+    fun getFileByUri(uri: String) : File =
+        AndroidFileManager.getFileFromUri(context, Uri.parse(uri))
 }
