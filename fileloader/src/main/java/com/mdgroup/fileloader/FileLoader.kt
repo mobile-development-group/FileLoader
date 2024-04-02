@@ -6,7 +6,11 @@ import androidx.lifecycle.LiveData
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.net.MalformedURLException
 import java.util.UUID
 
 class FileLoader(private val context: Context) {
@@ -62,16 +66,23 @@ class FileLoader(private val context: Context) {
         isCookie = isCookie
     )
 
-    fun getWorkInfosFlow(tag: String = TAG): Flow<List<WorkInfo>> =
+    fun getWorkInfosAsFlow(tag: String = TAG): Flow<List<WorkInfo>> =
         downloadWorkManager.getWorkInfosByTagFlow(tag)
 
-    fun getWorkInfoByIdFlow(uuid: UUID): Flow<WorkInfo> =
+    fun getWorkInfoByIdAsFlow(uuid: UUID): Flow<WorkInfo> =
         downloadWorkManager.getWorkInfoByIdFlow(uuid)
 
-    fun getWorkInfoByIdLiveData(uuid: UUID): LiveData<WorkInfo> =
+    fun getUrisByIdAsFlow(uuid: UUID): Flow<List<String>?> =
+        downloadWorkManager.getWorkInfoByIdFlow(uuid)
+            .map {
+                getThrowable(it)?.let { error -> throw error }
+                it.outputData.getStringArray(OUTPUT_URIS)?.toList()
+            }
+
+    fun getWorkInfoByIdAsLiveData(uuid: UUID): LiveData<WorkInfo> =
         downloadWorkManager.getWorkInfoByIdLiveData(uuid)
 
-    fun getWorkInfosByTagLiveData(tag: String = TAG): LiveData<List<WorkInfo>> =
+    fun getWorkInfosByTagAsLiveData(tag: String = TAG): LiveData<List<WorkInfo>> =
         downloadWorkManager.getWorkInfosByTagLiveData(tag)
 
     fun remove(uri: String) = remove(listOf(uri))
@@ -100,6 +111,19 @@ class FileLoader(private val context: Context) {
         return count
     }
 
-    fun getFileByUri(uri: String) : File =
+    fun getFileByUri(uri: String): File =
         AndroidFileManager.getFileFromUri(context, Uri.parse(uri))
+
+    fun getThrowable(info: WorkInfo): Throwable? {
+        val name = info.outputData.getString(OUTPUT_ERROR)
+        val error = FileLoaderError.entries.firstOrNull { it.name == name }
+        val message = info.outputData.getString(LoaderWorker.OUTPUT_ERROR_MESSAGE)
+        return when (error) {
+            FileLoaderError.FileNotFoundException -> FileNotFoundException(message)
+            FileLoaderError.MalformedURLException -> MalformedURLException(message)
+            FileLoaderError.IOException -> IOException(message)
+            FileLoaderError.Exception -> Exception(message)
+            else -> null
+        }
+    }
 }

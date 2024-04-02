@@ -29,6 +29,7 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
         const val KEY_PROGRESS = "KEY_ACTUAL_PROGRESS"
         const val OUTPUT_URIS = "OUTPUT_URIS"
         const val OUTPUT_ERROR = "OUTPUT_ERROR"
+        const val OUTPUT_ERROR_MESSAGE = "OUTPUT_ERROR_MESSAGE"
     }
 
     override fun doWork(): Result {
@@ -82,16 +83,36 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
                 }
             } catch (e: FileNotFoundException) {
                 Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
-                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
+                return Result.failure(
+                    workDataOf(
+                        OUTPUT_ERROR to FileLoaderError.FileNotFoundException.name,
+                        OUTPUT_ERROR_MESSAGE to e.localizedMessage
+                    )
+                )
             } catch (e: MalformedURLException) {
                 Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
-                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
+                return Result.failure(
+                    workDataOf(
+                        OUTPUT_ERROR to FileLoaderError.MalformedURLException.name,
+                        OUTPUT_ERROR_MESSAGE to e.localizedMessage
+                    )
+                )
             } catch (e: IOException) {
                 Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
-                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
+                return Result.failure(
+                    workDataOf(
+                        OUTPUT_ERROR to FileLoaderError.IOException.name,
+                        OUTPUT_ERROR_MESSAGE to e.localizedMessage
+                    )
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
-                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
+                return Result.failure(
+                    workDataOf(
+                        OUTPUT_ERROR to FileLoaderError.Exception.name,
+                        OUTPUT_ERROR_MESSAGE to e.localizedMessage
+                    )
+                )
             }
         }
 

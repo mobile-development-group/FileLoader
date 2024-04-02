@@ -34,15 +34,27 @@ val uuid = fileDownloader.load(
 )
 
 // Flow
-fileDownloader.getWorkInfoByIdFlow(uuid)
+// Get WorkInfo (you can get progress and state)
+fileDownloader.getWorkInfoByIdAsFlow(uuid)
     .onEach {
         val uris = it.outputData.getStringArray(FileLoader.OUTPUT_URIS)?.toList()
-        val error = it.outputData.getString(FileLoader.OUTPUT_ERROR)
+        val progress = it.progress.getInt(FileLoader.KEY_PROGRESS, 0)
+        val error = fileDownloader.getThrowable(it)
+    }
+    .launchIn(this)
+
+// Get uris
+fileDownloader.getUrisByIdAsFlow(uuid)
+    .onEach {
+        val uris = it ?: emptyList()
+    }
+    .catch {
+        val error = it
     }
     .launchIn(this)
 
 // LiveData
-fileDownloader.getWorkInfoByIdLiveData(uuid).observe(this) {
+fileDownloader.getWorkInfoByIdAsLiveData(uuid).observe(this) {
     val uris = it.outputData.getStringArray(FileLoader.OUTPUT_URIS)?.toList()
 }
 ```

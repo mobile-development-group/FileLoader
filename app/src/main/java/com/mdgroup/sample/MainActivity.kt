@@ -1,8 +1,6 @@
 package com.mdgroup.sample
 
 import android.os.Bundle
-import android.os.Environment
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -23,9 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.mdgroup.fileloader.DirType
 import com.mdgroup.fileloader.FileLoader
 import com.mdgroup.sample.ui.theme.FileLoaderTheme
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -51,10 +49,20 @@ class MainActivity : ComponentActivity() {
             var state by remember { mutableStateOf("STOP") }
             var uris by remember { mutableStateOf<List<String>>(emptyList()) }
             var progress by remember { mutableIntStateOf(0) }
-            var error by remember { mutableStateOf<String?>(null) }
+            var error by remember { mutableStateOf<Throwable?>(null) }
 
             LaunchedEffect(Unit) {
-                fileDownloader.getWorkInfoByIdFlow(uuid)
+                fileDownloader.getUrisByIdAsFlow(uuid)
+                    .onEach {
+                        uris = it ?: emptyList()
+                    }
+                    .catch {
+                        error = it
+                    }
+                    .launchIn(this)
+
+                // OR
+                fileDownloader.getWorkInfoByIdAsFlow(uuid)
                     .onEach {
                         state = it.state.name
 
@@ -63,12 +71,7 @@ class MainActivity : ComponentActivity() {
                         uris = it.outputData.getStringArray(FileLoader.OUTPUT_URIS)?.toList()
                             ?: emptyList()
 
-                        Log.d(
-                            "LaunchedEffect",
-                            "it.outputData: ${it.outputData.getStringArray(FileLoader.OUTPUT_URIS)}"
-                        )
-
-                        error = it.outputData.getString(FileLoader.OUTPUT_ERROR)
+                        error = fileDownloader.getThrowable(it)
                     }
                     .launchIn(this)
             }
@@ -112,7 +115,7 @@ class MainActivity : ComponentActivity() {
 
                         error?.let {
                             Text(
-                                text = "Error: $error",
+                                text = "Error: ${it.localizedMessage}",
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
