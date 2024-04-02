@@ -18,26 +18,6 @@ import java.util.regex.Pattern
 
 internal object AndroidFileManager {
 
-    /**
-     * Only your app can access. { android FilesDir() }
-     */
-    const val DIR_INTERNAL = 1
-
-    /**
-     * Only your app can access, can be deleted by system. { android CacheDir() }
-     */
-    const val DIR_CACHE = 2
-
-    /**
-     * Accessible by all apps but not by users. { android ExternalFilesDir() }
-     */
-    const val DIR_EXTERNAL_PRIVATE = 3
-
-    /**
-     * Accessible by all apps and users. { android ExternalStorageDirectory() }
-     */
-    const val DIR_EXTERNAL_PUBLIC = 4
-
     val isExternalStorageReadable: Boolean
         /* Checks if external storage is available to at least read */
         get() {
@@ -52,7 +32,7 @@ internal object AndroidFileManager {
         fileNamePrefix: String,
         fileExtension: String,
         dirName: String,
-        dirType: Int
+        dirType: DirType
     ): File = File(
         getAppropriateDirectory(context, dirName, dirType),
         getFileName(fileUri, fileNamePrefix, fileExtension)
@@ -86,16 +66,16 @@ internal object AndroidFileManager {
     fun getAppropriateDirectory(
         context: Context,
         directoryName: String,
-        directoryType: Int
+        directoryType: DirType
     ): File {
         val file = when (directoryType) {
-            DIR_CACHE -> File(context.cacheDir, directoryName)
-            DIR_EXTERNAL_PRIVATE -> getExternalPrivateDirectory(
+            DirType.DIR_CACHE -> File(context.cacheDir, directoryName)
+            DirType.DIR_EXTERNAL_PRIVATE -> getExternalPrivateDirectory(
                 context,
                 directoryName
             )
 
-            DIR_EXTERNAL_PUBLIC -> getExternalPublicDirectory(directoryName)
+            DirType.DIR_EXTERNAL_PUBLIC -> getExternalPublicDirectory(directoryName)
             else -> File(context.filesDir, directoryName)
         }
         if (!file.exists()) {
@@ -150,7 +130,7 @@ internal object AndroidFileManager {
         uri: String,
         fileNamePrefix: String,
         dirName: String,
-        dirType: Int
+        dirType: DirType
     ): File? {
         var foundFile: File? = null
         if (!TextUtils.isEmpty(dirName)) {

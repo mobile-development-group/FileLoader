@@ -16,7 +16,7 @@ internal object WorkUtils {
         fileNamePrefix: String? = null,
         fileExtension: FileExtension = FileExtension.UNKNOWN,
         directoryName: String? = null,
-        directoryType: Int? = null,
+        directoryType: DirType? = null,
         headers: Map<String, String>? = null,
         isCookie: Boolean = false
     ): UUID {
@@ -32,7 +32,7 @@ internal object WorkUtils {
 
             putString(LoaderWorker.KEY_DIRECTORY_NAME, directoryName)
             if (directoryType != null) {
-                putInt(LoaderWorker.KEY_DIRECTORY_TYPE, directoryType)
+                putString(LoaderWorker.KEY_DIRECTORY_TYPE, directoryType.name)
             }
 
             if (!headers.isNullOrEmpty()) {

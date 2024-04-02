@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.MalformedURLException
@@ -44,7 +43,8 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
         val directoryName =
             inputData.getString(KEY_DIRECTORY_NAME) ?: Environment.DIRECTORY_DOWNLOADS
         val directoryType =
-            inputData.getInt(KEY_DIRECTORY_TYPE, AndroidFileManager.DIR_EXTERNAL_PUBLIC)
+            DirType.entries.firstOrNull { it.name == inputData.getString(KEY_DIRECTORY_TYPE) }
+                ?: DirType.DIR_EXTERNAL_PUBLIC
 
         val headersNames = inputData.getStringArray(KEY_HEADERS_NAMES)
         val headersValues = inputData.getStringArray(KEY_HEADERS_VALUES)
@@ -81,13 +81,17 @@ internal class LoaderWorker(context: Context, workerParameters: WorkerParameters
                     return Result.success(workDataOf(OUTPUT_URIS to uris.toTypedArray()))
                 }
             } catch (e: FileNotFoundException) {
-                Log.d(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
             } catch (e: MalformedURLException) {
-                Log.d(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
             } catch (e: IOException) {
-                Log.d(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
             } catch (e: Exception) {
-                Log.d(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                Log.e(TAG, "${LoaderWorker::class.java.name}: ${e.localizedMessage}")
+                return Result.failure(workDataOf(OUTPUT_ERROR to e.localizedMessage))
             }
         }
 

@@ -16,26 +16,6 @@ class FileLoader(private val context: Context) {
         const val OUTPUT_URIS = LoaderWorker.OUTPUT_URIS
         const val OUTPUT_ERROR = LoaderWorker.OUTPUT_ERROR
 
-        /**
-         * Only your app can access. { android FilesDir() }
-         */
-        const val DIR_INTERNAL = AndroidFileManager.DIR_INTERNAL
-
-        /**
-         * Only your app can access, can be deleted by system. { android CacheDir() }
-         */
-        const val DIR_CACHE = AndroidFileManager.DIR_CACHE
-
-        /**
-         * Accessible by all apps but not by users. { android ExternalFilesDir() }
-         */
-        const val DIR_EXTERNAL_PRIVATE = AndroidFileManager.DIR_EXTERNAL_PRIVATE
-
-        /**
-         * Accessible by all apps and users. { android ExternalStorageDirectory() }
-         */
-        const val DIR_EXTERNAL_PUBLIC = AndroidFileManager.DIR_EXTERNAL_PUBLIC
-
         private const val TAG = "FileLoader"
     }
 
@@ -47,7 +27,7 @@ class FileLoader(private val context: Context) {
         fileNamePrefix: String? = null,
         fileExtension: FileExtension = FileExtension.UNKNOWN,
         directoryName: String? = null,
-        directoryType: Int? = null,
+        directoryType: DirType? = null,
         headers: Map<String, String>? = null,
         isCookie: Boolean = false
     ) = load(
@@ -67,7 +47,7 @@ class FileLoader(private val context: Context) {
         fileNamePrefix: String? = null,
         fileExtension: FileExtension = FileExtension.UNKNOWN,
         directoryName: String? = null,
-        directoryType: Int? = null,
+        directoryType: DirType? = null,
         headers: Map<String, String>? = null,
         isCookie: Boolean = false
     ): UUID = WorkUtils.makeDownloadRequest(
@@ -109,7 +89,7 @@ class FileLoader(private val context: Context) {
         return count
     }
 
-    fun clearDirectory(directoryName: String, directoryType: Int): Int {
+    fun clearDirectory(directoryName: String, directoryType: DirType): Int {
         val directory =
             AndroidFileManager.getAppropriateDirectory(context, directoryName, directoryType)
         var count = 0

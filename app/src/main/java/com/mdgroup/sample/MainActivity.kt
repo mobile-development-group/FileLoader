@@ -1,6 +1,7 @@
 package com.mdgroup.sample
 
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.mdgroup.fileloader.DirType
 import com.mdgroup.fileloader.FileLoader
 import com.mdgroup.sample.ui.theme.FileLoaderTheme
 import kotlinx.coroutines.flow.launchIn
@@ -41,7 +43,7 @@ class MainActivity : ComponentActivity() {
         val uuid = fileDownloader.load(
             urls,
 //            directoryName = Environment.DIRECTORY_DOWNLOADS,
-//            directoryType = FileDownloader.DIR_EXTERNAL_PUBLIC
+//            directoryType = DirType.DIR_EXTERNAL_PUBLIC
         )
 
         setContent {

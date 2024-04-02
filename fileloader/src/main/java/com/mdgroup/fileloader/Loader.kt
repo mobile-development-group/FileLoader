@@ -21,7 +21,7 @@ internal class Loader private constructor(
     private val fileNamePrefix: String = "",
     private val fileExtension: String = "",
     private val dirName: String,
-    private val dirType: Int,
+    private val dirType: DirType,
     private val headers: Map<String, String>?,
     private val isCookie: Boolean
 ) {
@@ -117,7 +117,7 @@ internal class Loader private constructor(
 
         urlConnection.disconnect()
 
-        Log.d(TAG, "Success download: $url")
+        Log.d(TAG, "Success download: $downloadFilePath")
 
         return downloadFilePath
     }
@@ -125,7 +125,7 @@ internal class Loader private constructor(
     class Builder {
         private var url: String? = null
         private var dirName: String? = null
-        private var dirType = 0
+        private var dirType = DirType.DIR_EXTERNAL_PUBLIC
         private var context: Context? = null
         private var fileNamePrefix = ""
         private var fileExtension = ""
@@ -142,7 +142,7 @@ internal class Loader private constructor(
             return this
         }
 
-        fun setDirType(dirType: Int): Builder {
+        fun setDirType(dirType: DirType): Builder {
             this.dirType = dirType
             return this
         }

@@ -30,14 +30,14 @@ val fileDownloader = FileLoader(this)
 val uuid = fileDownloader.load(
     url = "https://raw.githubusercontent.com/mobile-development-group/fileloader/main/assets/kittens.jpeg",
     directoryName = Environment.DIRECTORY_DOWNLOADS,
-    directoryType = FileDownloader.DIR_EXTERNAL_PUBLIC
+    directoryType = DirType.DIR_EXTERNAL_PUBLIC
 )
 
 // Flow
 fileDownloader.getWorkInfoByIdFlow(uuid)
     .onEach {
         val uris = it.outputData.getStringArray(FileLoader.OUTPUT_URIS)?.toList()
-            ?: emptyList()
+        val error = it.outputData.getString(FileLoader.OUTPUT_ERROR)
     }
     .launchIn(this)
 
