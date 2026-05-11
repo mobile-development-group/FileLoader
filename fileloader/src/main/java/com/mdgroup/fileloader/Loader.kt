@@ -103,18 +103,6 @@ internal class Loader private constructor(
         }
         outputStream.close()
 
-        // Check if downloaded file is not corrupt
-        var contentLength = 0
-        try {
-            contentLength = urlConnection.getHeaderField("Content-Length").toInt()
-        } catch (e: NumberFormatException) {
-            e.printStackTrace()
-        }
-        if (actualSize < contentLength) {
-            downloadFilePath.delete()
-            throw IOException("Failed to download file. Content-Length: $contentLength")
-        }
-
         urlConnection.disconnect()
 
         Log.d(TAG, "Success download: $downloadFilePath")
